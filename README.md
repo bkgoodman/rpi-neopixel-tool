@@ -26,9 +26,11 @@ For a complete list of flags, use `--help`. But important ones are:
 When you run with `-p filename` mode, you create a named pipe which you can write subsequent commands to. Pipe Commands:
 
 | Prefix | Value | Description |
+|--------|-------|-------------|
 | ! | Decimal Number | Animation Delay in uSec | 
 | @ | Decimal Digit | Animation Mode | 
 | None | 6 digit hex value | RGB Pixel color |
+
 
 Specify as many pixel colors as you want. 
 
@@ -36,7 +38,15 @@ Example:
 
 `echo -n '@3 !80000  200000' >> testpipe`
 
+## Animation Modes
 
+| Number | Name | Description |
+|--------|------|-------------|
+| 0 | Normal | Static - Does not move - Optimized for Low CPU Usage | 
+| 1 | Fade |  Turns on, then fades out |
+| 2 | Blink |  Fades in and out |
+| 3 | Wink |  Fader Animation |
+| 3 | Fade |  Dark walking spot |
 
 # Building
 

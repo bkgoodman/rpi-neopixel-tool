@@ -42,6 +42,7 @@ static char VERSION[] = "XX.YY.ZZ";
 #include <signal.h>
 #include <stdarg.h>
 #include <getopt.h>
+#include <sys/ioctl.h>
 
 
 #include <errno.h>
@@ -386,6 +387,14 @@ void strtocmdbuf(char *str) {
 	 } else if (tok[0] == '@') {
 		 // If it's an animation command, set the mode
 		 anim = tok[1] - '0';
+			int flags = fcntl(pipe_fd, F_GETFL, 0);
+		 if (anim != ANIM_NORMAL) {
+			fcntl(pipe_fd, F_SETFL, flags | O_NONBLOCK);
+		 } else {
+			fcntl(pipe_fd, F_SETFL, flags & ~O_NONBLOCK);
+		 }
+			flags = fcntl(pipe_fd, F_GETFL, 0);
+			printf("Flags now %d\n",flags);
 	 } else {
 		 // It's an RGB color - add to buffer
 		 cmdbuf[cmdbuf_len] = strtoul(tok,0L,16);
@@ -419,7 +428,7 @@ int main(int argc, char *argv[])
 			perror("Failed to create pipe");
 			return 1;
 		}
-		pipe_fd = open(pipename, O_RDONLY | O_NONBLOCK);
+		pipe_fd = open(pipename, O_RDONLY );
 		if (pipe_fd == -1) {
 			perror("failed to open shared pipe");
 			return 1;
@@ -517,7 +526,19 @@ int main(int argc, char *argv[])
 		char new_message[1024];
 		int bytes_read =
 		    read(pipe_fd, new_message, sizeof(new_message));
-		if (bytes_read >= 1) {
+		if (bytes_read == 0) {
+			
+			if (anim == ANIM_NORMAL) {
+				close(pipe_fd);
+				pipe_fd = open(pipename, O_RDONLY);
+				if (pipe_fd == -1) {
+					perror("failed to reopen shared pipe");
+					return 1;
+				}
+				}
+			
+			}
+		else if (bytes_read >= 1) {
 			new_message[bytes_read]=(char) 0;
 			strtocmdbuf(new_message);
 			animphase=0;

@@ -124,6 +124,15 @@ CMakeFiles/neotool.dir/neotool.c.o: neotool.c \
   /usr/include/aarch64-linux-gnu/bits/signal_ext.h \
   /usr/include/getopt.h \
   /usr/include/aarch64-linux-gnu/bits/getopt_ext.h \
+  /usr/include/aarch64-linux-gnu/sys/ioctl.h \
+  /usr/include/aarch64-linux-gnu/bits/ioctls.h \
+  /usr/lib/linux/uapi/arm64/asm/ioctls.h \
+  /usr/include/asm-generic/ioctls.h \
+  /usr/include/linux/ioctl.h \
+  /usr/lib/linux/uapi/arm64/asm/ioctl.h \
+  /usr/include/asm-generic/ioctl.h \
+  /usr/include/aarch64-linux-gnu/bits/ioctl-types.h \
+  /usr/include/aarch64-linux-gnu/sys/ttydefaults.h \
   /usr/include/errno.h \
   /usr/include/aarch64-linux-gnu/bits/errno.h \
   /usr/include/linux/errno.h \
@@ -152,11 +161,23 @@ rpi_ws281x/dma.h:
 
 /usr/include/asm-generic/errno.h:
 
+rpi_ws281x/gpio.h:
+
+/usr/include/linux/errno.h:
+
+/usr/include/aarch64-linux-gnu/bits/errno.h:
+
+/usr/include/errno.h:
+
+/usr/include/aarch64-linux-gnu/sys/ttydefaults.h:
+
+/usr/include/asm-generic/ioctl.h:
+
+/usr/lib/linux/uapi/arm64/asm/ioctl.h:
+
 /usr/include/aarch64-linux-gnu/bits/stdlib-float.h:
 
 /usr/include/aarch64-linux-gnu/bits/types/__fpos_t.h:
-
-/usr/include/aarch64-linux-gnu/bits/pthreadtypes-arch.h:
 
 /usr/include/aarch64-linux-gnu/bits/pthreadtypes.h:
 
@@ -174,11 +195,13 @@ rpi_ws281x/dma.h:
 
 /usr/include/aarch64-linux-gnu/sys/types.h:
 
+/usr/lib/linux/uapi/arm64/asm/errno.h:
+
+/usr/lib/linux/uapi/arm64/asm/ioctls.h:
+
 /usr/include/aarch64-linux-gnu/bits/waitflags.h:
 
 /usr/include/aarch64-linux-gnu/bits/wchar.h:
-
-/usr/include/errno.h:
 
 /usr/include/aarch64-linux-gnu/bits/waitstatus.h:
 
@@ -202,6 +225,10 @@ rpi_ws281x/dma.h:
 
 /usr/include/aarch64-linux-gnu/bits/sigstack.h:
 
+/usr/include/aarch64-linux-gnu/bits/pthreadtypes-arch.h:
+
+/usr/include/asm-generic/ioctls.h:
+
 /usr/include/features.h:
 
 /usr/include/aarch64-linux-gnu/bits/libc-header-start.h:
@@ -213,10 +240,6 @@ rpi_ws281x/dma.h:
 /usr/include/string.h:
 
 /usr/include/aarch64-linux-gnu/bits/types/__mbstate_t.h:
-
-rpi_ws281x/gpio.h:
-
-/usr/include/linux/errno.h:
 
 /usr/include/aarch64-linux-gnu/bits/struct_rwlock.h:
 
@@ -238,8 +261,6 @@ rpi_ws281x/gpio.h:
 
 /usr/include/aarch64-linux-gnu/bits/uintn-identity.h:
 
-/usr/include/aarch64-linux-gnu/sys/cdefs.h:
-
 /usr/include/aarch64-linux-gnu/bits/sigthread.h:
 
 /usr/include/alloca.h:
@@ -251,8 +272,6 @@ rpi_ws281x/gpio.h:
 /usr/include/asm-generic/int-ll64.h:
 
 /usr/include/aarch64-linux-gnu/bits/types/timer_t.h:
-
-/usr/include/aarch64-linux-gnu/bits/errno.h:
 
 /usr/include/stdio.h:
 
@@ -274,6 +293,8 @@ rpi_ws281x/gpio.h:
 
 /usr/include/aarch64-linux-gnu/bits/types/FILE.h:
 
+/usr/include/aarch64-linux-gnu/bits/ioctl-types.h:
+
 /usr/include/aarch64-linux-gnu/sys/user.h:
 
 /usr/include/aarch64-linux-gnu/bits/types/siginfo_t.h:
@@ -290,6 +311,10 @@ rpi_ws281x/gpio.h:
 
 /usr/include/aarch64-linux-gnu/bits/types/sigval_t.h:
 
+/usr/include/aarch64-linux-gnu/sys/cdefs.h:
+
+/usr/include/aarch64-linux-gnu/bits/ioctls.h:
+
 /usr/include/aarch64-linux-gnu/bits/environments.h:
 
 /usr/include/aarch64-linux-gnu/bits/confname.h:
@@ -299,6 +324,8 @@ rpi_ws281x/gpio.h:
 /usr/include/aarch64-linux-gnu/bits/getopt_posix.h:
 
 /usr/include/aarch64-linux-gnu/bits/getopt_core.h:
+
+/usr/include/linux/ioctl.h:
 
 /usr/include/linux/types.h:
 
@@ -410,4 +437,4 @@ neotool.c:
 
 /usr/include/aarch64-linux-gnu/bits/getopt_ext.h:
 
-/usr/lib/linux/uapi/arm64/asm/errno.h:
+/usr/include/aarch64-linux-gnu/sys/ioctl.h:
