@@ -1,0 +1,1 @@
+/usr/bin/cc CMakeFiles/neotool.dir/neotool.c.o -o neotool  rpi_ws281x/libws2811.a -lm 
