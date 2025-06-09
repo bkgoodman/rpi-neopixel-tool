@@ -11,13 +11,32 @@ Run like:
 
 `./neosign -x 3 ff0000 00ff00 0000ff`
 
-Mos
+Pipe option allows you to specify a named pipe (`-p filename`). Subsequent writes to the named
+pipe with update the display with the given text.
 
 # Important flags
 For a complete list of flags, use `--help`. But important ones are:
 
 `-x` Number of pixels in array
+`-p` Create and listen on named pipe for new text. (echo or write to pipe to update text)
 `-c` Clear display on exit
+
+# Pipe Commands
+
+When you run with `-p filename` mode, you create a named pipe which you can write subsequent commands to. Pipe Commands:
+
+| Prefix | Value | Description |
+| ! | Decimal Number | Animation Delay in uSec | 
+| @ | Decimal Digit | Animation Mode | 
+| None | 6 digit hex value | RGB Pixel color |
+
+Specify as many pixel colors as you want. 
+
+Example:
+
+`echo -n '@3 !80000  200000' >> testpipe`
+
+
 
 # Building
 

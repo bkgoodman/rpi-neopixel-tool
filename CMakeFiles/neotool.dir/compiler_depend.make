@@ -124,6 +124,12 @@ CMakeFiles/neotool.dir/neotool.c.o: neotool.c \
   /usr/include/aarch64-linux-gnu/bits/signal_ext.h \
   /usr/include/getopt.h \
   /usr/include/aarch64-linux-gnu/bits/getopt_ext.h \
+  /usr/include/errno.h \
+  /usr/include/aarch64-linux-gnu/bits/errno.h \
+  /usr/include/linux/errno.h \
+  /usr/lib/linux/uapi/arm64/asm/errno.h \
+  /usr/include/asm-generic/errno.h \
+  /usr/include/asm-generic/errno-base.h \
   rpi_ws281x/clk.h \
   rpi_ws281x/gpio.h \
   rpi_ws281x/dma.h \
@@ -139,6 +145,12 @@ rpi_ws281x/rpihw.h:
 rpi_ws281x/ws2811.h:
 
 rpi_ws281x/version.h:
+
+rpi_ws281x/pwm.h:
+
+rpi_ws281x/dma.h:
+
+/usr/include/asm-generic/errno.h:
 
 /usr/include/aarch64-linux-gnu/bits/stdlib-float.h:
 
@@ -166,6 +178,8 @@ rpi_ws281x/version.h:
 
 /usr/include/aarch64-linux-gnu/bits/wchar.h:
 
+/usr/include/errno.h:
+
 /usr/include/aarch64-linux-gnu/bits/waitstatus.h:
 
 /usr/include/aarch64-linux-gnu/bits/types/sigevent_t.h:
@@ -174,19 +188,17 @@ rpi_ws281x/version.h:
 
 /usr/lib/linux/uapi/arm64/asm/sigcontext.h:
 
-rpi_ws281x/dma.h:
-
 /usr/include/aarch64-linux-gnu/bits/floatn-common.h:
 
 /usr/include/aarch64-linux-gnu/bits/types/__locale_t.h:
 
 /usr/include/aarch64-linux-gnu/bits/siginfo-arch.h:
 
+/usr/include/asm-generic/errno-base.h:
+
 /usr/include/aarch64-linux-gnu/bits/wordsize.h:
 
 /usr/include/asm-generic/types.h:
-
-rpi_ws281x/gpio.h:
 
 /usr/include/aarch64-linux-gnu/bits/sigstack.h:
 
@@ -201,6 +213,10 @@ rpi_ws281x/gpio.h:
 /usr/include/string.h:
 
 /usr/include/aarch64-linux-gnu/bits/types/__mbstate_t.h:
+
+rpi_ws281x/gpio.h:
+
+/usr/include/linux/errno.h:
 
 /usr/include/aarch64-linux-gnu/bits/struct_rwlock.h:
 
@@ -235,6 +251,8 @@ rpi_ws281x/gpio.h:
 /usr/include/asm-generic/int-ll64.h:
 
 /usr/include/aarch64-linux-gnu/bits/types/timer_t.h:
+
+/usr/include/aarch64-linux-gnu/bits/errno.h:
 
 /usr/include/stdio.h:
 
@@ -328,6 +346,10 @@ rpi_ws281x/gpio.h:
 
 /usr/include/aarch64-linux-gnu/bits/types/sig_atomic_t.h:
 
+rpi_ws281x/clk.h:
+
+/usr/include/aarch64-linux-gnu/bits/types/__sigval_t.h:
+
 neotool.c:
 
 /usr/include/aarch64-linux-gnu/bits/sigcontext.h:
@@ -388,8 +410,4 @@ neotool.c:
 
 /usr/include/aarch64-linux-gnu/bits/getopt_ext.h:
 
-/usr/include/aarch64-linux-gnu/bits/types/__sigval_t.h:
-
-rpi_ws281x/clk.h:
-
-rpi_ws281x/pwm.h:
+/usr/lib/linux/uapi/arm64/asm/errno.h:

@@ -44,6 +44,7 @@ static char VERSION[] = "XX.YY.ZZ";
 #include <getopt.h>
 
 
+#include <errno.h>
 #include "clk.h"
 #include "gpio.h"
 #include "dma.h"
@@ -68,6 +69,9 @@ extern int optind;
 
 int led_count = LED_COUNT;
 
+unsigned long udelay = 100000;
+int pipe_fd = -1;
+char *pipename = 0L;
 int clear_on_exit = 0;
 
 ws2811_t ledstring =
@@ -94,7 +98,8 @@ ws2811_t ledstring =
     },
 };
 
-ws2811_led_t *matrix;
+ws2811_led_t *matrix,*cmdbuf;
+int cmdbuf_len;
 
 static uint8_t running = 1;
 
@@ -118,6 +123,18 @@ void matrix_shift(void)
     }
     
 }
+
+typedef enum enimateMode_e {
+	ANIM_NORMAL=0,
+	ANIM_FADE,
+	ANIM_BLINK,
+	ANIM_WALK,
+	ANIM_WINK
+} animateMode_t;
+
+unsigned long animphase=0; // Animation Phase
+
+animateMode_t anim = ANIM_NORMAL;
 
 void matrix_clear(void)
 {
@@ -202,6 +219,7 @@ void parseargs(int argc, char **argv, ws2811_t *ws2811)
 	{
 		{"help", no_argument, 0, 'h'},
 		{"dma", required_argument, 0, 'd'},
+		{"pipe", required_argument, 0, 'p'},
 		{"gpio", required_argument, 0, 'g'},
 		{"invert", no_argument, 0, 'i'},
 		{"clear", no_argument, 0, 'c'},
@@ -215,7 +233,7 @@ void parseargs(int argc, char **argv, ws2811_t *ws2811)
 	{
 
 		index = 0;
-		c = getopt_long(argc, argv, "cd:g:his:vx:y:", longopts, &index);
+		c = getopt_long(argc, argv, "p:cd:g:his:vx:y:", longopts, &index);
 
 		if (c == -1)
 			break;
@@ -237,6 +255,7 @@ void parseargs(int argc, char **argv, ws2811_t *ws2811)
 				"                 If omitted, default is 18 (PWM0)\n"
 				"-i (--invert)  - invert pin output (pulse LOW)\n"
 				"-c (--clear)   - clear matrix on exit.\n"
+				"-p (--pipe)    - Shared pipe filename for text updates\n"
 				"-v (--version) - version information\n"
 				, argv[0]);
 			exit(-1);
@@ -330,6 +349,11 @@ void parseargs(int argc, char **argv, ws2811_t *ws2811)
 			}
 			break;
 
+		case 'p':
+			if (optarg) {
+				pipename = strdup(optarg);
+			}
+			break;
 		case 'v':
 			fprintf(stderr, "%s version %s\n", argv[0], VERSION);
 			exit(-1);
@@ -344,7 +368,32 @@ void parseargs(int argc, char **argv, ws2811_t *ws2811)
 	}
 }
 
+void strtocmdbuf(char *str) {
+	cmdbuf_len = 0;
+	char *tok;
+	if (cmdbuf) {
+		free((void *) cmdbuf);
+		cmdbuf = 0L;
+	}
 
+	// Buffer size isn't perfect, but good enough
+    cmdbuf = malloc(sizeof(ws2811_led_t) * (strlen(str)/6));
+    tok  = strtok(str," ");
+    while (tok) {
+	 if (tok[0] == '!') {
+		 // If it's a delay command, set delay
+		 udelay = strtoul(&tok[1],0L,10);
+	 } else if (tok[0] == '@') {
+		 // If it's an animation command, set the mode
+		 anim = tok[1] - '0';
+	 } else {
+		 // It's an RGB color - add to buffer
+		 cmdbuf[cmdbuf_len] = strtoul(tok,0L,16);
+		 cmdbuf_len++;
+	 }
+	 tok = strtok(0L," ");
+    }
+}
 int main(int argc, char *argv[])
 {
     ws2811_return_t ret;
@@ -354,6 +403,8 @@ int main(int argc, char *argv[])
     parseargs(argc, argv, &ledstring);
 
     matrix = malloc(sizeof(ws2811_led_t) * led_count);
+    cmdbuf = 0L;
+    cmdbuf_len = 0;
 
     setup_handlers();
 
@@ -363,9 +414,19 @@ int main(int argc, char *argv[])
         return ret;
     }
 
+	if (pipename) {
+		if (mkfifo(pipename, 0666) == -1 && errno != EEXIST) {
+			perror("Failed to create pipe");
+			return 1;
+		}
+		pipe_fd = open(pipename, O_RDONLY | O_NONBLOCK);
+		if (pipe_fd == -1) {
+			perror("failed to open shared pipe");
+			return 1;
+		}
+	}
     /* Print Running Stuff */
     if (optind < argc) {
-    printf("EXTR ARGS Optind is %d argc is %d\n",optind,argc);
       int i;
       matrix_clear();
       for (i=optind;i<argc;i++)  {
@@ -382,8 +443,65 @@ int main(int argc, char *argv[])
     /* Long running display */
     while (running)
     {
-        matrix_shift();
-        matrix_bottom();
+	    int i,x=0;
+	    if (cmdbuf) {
+		switch (anim) {
+		case ANIM_FADE:
+			if (animphase >  7) animphase=0;
+			    for (i=0;i<led_count;i++) {
+				    if (++x >= cmdbuf_len) x=0;
+				    matrix[i] = 
+					    	(((cmdbuf[x] & 0xff0000) >> animphase)  & 0xff0000)  | 
+					    	(((cmdbuf[x] & 0xff00) >> animphase)  & 0x00ff00)  | 
+					    	(((cmdbuf[x] & 0xff) >> animphase)  & 0xff);
+			    }
+			    animphase++;
+			break;
+		case ANIM_BLINK:
+			if (animphase >  16) animphase=0;
+			    for (i=0;i<led_count;i++) {
+				    if (++x >= cmdbuf_len) x=0;
+				    int p = animphase;
+				    if (p>=8) p= 16-p;
+				    matrix[i] = 
+					    	(((cmdbuf[x] & 0xff0000) >> p)  & 0xff0000)  | 
+					    	(((cmdbuf[x] & 0xff00) >> p)  & 0x00ff00)  | 
+					    	(((cmdbuf[x] & 0xff) >> p)  & 0xff);
+			    }
+			    animphase++;
+			break;
+		case ANIM_WALK:
+			    for (i=0;i<led_count;i++) {
+				    if (++x >= cmdbuf_len) x=0;
+				    int p = (animphase+i)%16;
+					if (p >  16) p=0;
+				    if (p>=8) p= 16-p;
+				    matrix[i] = 
+					    	(((cmdbuf[x] & 0xff0000) >> p)  & 0xff0000)  | 
+					    	(((cmdbuf[x] & 0xff00) >> p)  & 0x00ff00)  | 
+					    	(((cmdbuf[x] & 0xff) >> p)  & 0xff);
+			    }
+			    animphase++;
+			break;
+		case ANIM_WINK:
+			if (animphase >  led_count) animphase=0;
+			    for (i=0;i<led_count;i++) {
+				    if (++x >= cmdbuf_len) x=0;
+				    if (i == animphase) {
+				    matrix[i] = 0;
+				    } else 
+				    matrix[i] = cmdbuf[x];
+			    }
+			    animphase++;
+			break;
+		  default:
+		    for (i=0;i<led_count;i++) {
+			    if (++x >= cmdbuf_len) x=0;
+			    matrix[i] = cmdbuf[x];
+		    }
+		    break;
+		}
+	    }
         matrix_render();
 
         if ((ret = ws2811_render(&ledstring)) != WS2811_SUCCESS)
@@ -393,7 +511,18 @@ int main(int argc, char *argv[])
         }
 
         // 15 frames /sec
-        usleep(1000000 / 15);
+        usleep(udelay );
+
+	if (pipe_fd != -1) {
+		char new_message[1024];
+		int bytes_read =
+		    read(pipe_fd, new_message, sizeof(new_message));
+		if (bytes_read >= 1) {
+			new_message[bytes_read]=(char) 0;
+			strtocmdbuf(new_message);
+			animphase=0;
+		}
+	}
     }
 	}
     if (clear_on_exit) {
