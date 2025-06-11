@@ -394,7 +394,6 @@ void strtocmdbuf(char *str) {
 			fcntl(pipe_fd, F_SETFL, flags & ~O_NONBLOCK);
 		 }
 			flags = fcntl(pipe_fd, F_GETFL, 0);
-			printf("Flags now %d\n",flags);
 	 } else {
 		 // It's an RGB color - add to buffer
 		 cmdbuf[cmdbuf_len] = strtoul(tok,0L,16);
