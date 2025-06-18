@@ -530,7 +530,8 @@ int main(int argc, char *argv[])
 			break;
 		case ANIM_SIN:
 			        for (i = 0; i < led_count; i++) {
-			    int cmd_idx = (i + (int)animphase) % cmdbuf_len;
+			    //int cmd_idx = (i + (int)animphase) % cmdbuf_len;
+			    int cmd_idx = i % cmdbuf_len;
 			    unsigned int original_color = cmdbuf[cmd_idx];
 
 			    float normalized_position = (float)i / (led_count - 1);
