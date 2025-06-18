@@ -43,6 +43,7 @@ static char VERSION[] = "XX.YY.ZZ";
 #include <stdarg.h>
 #include <getopt.h>
 #include <sys/ioctl.h>
+#include <math.h>
 
 
 #include <errno.h>
@@ -74,6 +75,7 @@ unsigned long udelay = 100000;
 int pipe_fd = -1;
 char *pipename = 0L;
 int clear_on_exit = 0;
+char *messagestr = 0L;
 
 ws2811_t ledstring =
 {
@@ -130,7 +132,8 @@ typedef enum enimateMode_e {
 	ANIM_FADE,
 	ANIM_BLINK,
 	ANIM_WALK,
-	ANIM_WINK
+	ANIM_WINK,
+	ANIM_SIN
 } animateMode_t;
 
 unsigned long animphase=0; // Animation Phase
@@ -221,6 +224,7 @@ void parseargs(int argc, char **argv, ws2811_t *ws2811)
 		{"help", no_argument, 0, 'h'},
 		{"dma", required_argument, 0, 'd'},
 		{"pipe", required_argument, 0, 'p'},
+		{"message", required_argument, 0, 'm'},
 		{"gpio", required_argument, 0, 'g'},
 		{"invert", no_argument, 0, 'i'},
 		{"clear", no_argument, 0, 'c'},
@@ -234,7 +238,7 @@ void parseargs(int argc, char **argv, ws2811_t *ws2811)
 	{
 
 		index = 0;
-		c = getopt_long(argc, argv, "p:cd:g:his:vx:y:", longopts, &index);
+		c = getopt_long(argc, argv, "m:p:cd:g:his:vx:y:", longopts, &index);
 
 		if (c == -1)
 			break;
@@ -257,6 +261,7 @@ void parseargs(int argc, char **argv, ws2811_t *ws2811)
 				"-i (--invert)  - invert pin output (pulse LOW)\n"
 				"-c (--clear)   - clear matrix on exit.\n"
 				"-p (--pipe)    - Shared pipe filename for text updates\n"
+				"-m (--message) - Pipe Message string\n"
 				"-v (--version) - version information\n"
 				, argv[0]);
 			exit(-1);
@@ -293,6 +298,11 @@ void parseargs(int argc, char **argv, ws2811_t *ws2811)
 			clear_on_exit=1;
 			break;
 
+		case 'm':
+			if (optarg) {
+				messagestr = strdup(optarg);
+			}
+			break;
 		case 'd':
 			if (optarg) {
 				int dma = atoi(optarg);
@@ -386,6 +396,9 @@ void strtocmdbuf(char *str) {
 		 udelay = strtoul(&tok[1],0L,10);
 	 } else if (tok[0] == '@') {
 		 // If it's an animation command, set the mode
+		 if (tok[1] == 'q') {
+			 running = 0;
+		 }  else {
 		 anim = tok[1] - '0';
 			int flags = fcntl(pipe_fd, F_GETFL, 0);
 		 if (anim != ANIM_NORMAL) {
@@ -394,6 +407,7 @@ void strtocmdbuf(char *str) {
 			fcntl(pipe_fd, F_SETFL, flags & ~O_NONBLOCK);
 		 }
 			flags = fcntl(pipe_fd, F_GETFL, 0);
+		 }
 	 } else {
 		 // It's an RGB color - add to buffer
 		 cmdbuf[cmdbuf_len] = strtoul(tok,0L,16);
@@ -402,6 +416,13 @@ void strtocmdbuf(char *str) {
 	 tok = strtok(0L," ");
     }
 }
+#define SINE_WAVE_FREQUENCY 1.0f
+#define SINE_WAVE_AMPLITUDE 0.5f
+#define SINE_WAVE_OFFSET    0.5f
+const float TWO_PI = 2.0f * M_PI;
+const float FREQ_FACTOR = SINE_WAVE_FREQUENCY * TWO_PI;
+const float ANIM_PHASE_SCALE = 0.4f * TWO_PI; // This part depends on animphase increment
+
 int main(int argc, char *argv[])
 {
     ws2811_return_t ret;
@@ -427,14 +448,17 @@ int main(int argc, char *argv[])
 			perror("Failed to create pipe");
 			return 1;
 		}
-		pipe_fd = open(pipename, O_RDONLY );
+		if (messagestr) 
+			pipe_fd = open(pipename, O_RDONLY | O_NONBLOCK );
+		else 
+			pipe_fd = open(pipename, O_RDONLY );
 		if (pipe_fd == -1) {
 			perror("failed to open shared pipe");
 			return 1;
 		}
 	}
     /* Print Running Stuff */
-    if (optind < argc) {
+    if ((optind < argc) && (!messagestr)) {
       int i;
       matrix_clear();
       for (i=optind;i<argc;i++)  {
@@ -447,7 +471,9 @@ int main(int argc, char *argv[])
         }
     }
     else {
-
+	if (messagestr) {
+		strtocmdbuf(messagestr);
+	}
     /* Long running display */
     while (running)
     {
@@ -501,6 +527,37 @@ int main(int argc, char *argv[])
 				    matrix[i] = cmdbuf[x];
 			    }
 			    animphase++;
+			break;
+		case ANIM_SIN:
+			        for (i = 0; i < led_count; i++) {
+			    int cmd_idx = (i + (int)animphase) % cmdbuf_len;
+			    unsigned int original_color = cmdbuf[cmd_idx];
+
+			    float normalized_position = (float)i / (led_count - 1);
+			    if (led_count == 1) normalized_position = 0.0f;
+
+			    //float phase = (normalized_position * SINE_WAVE_FREQUENCY * 2.0f * M_PI) + ((float)animphase * 0.1f * 2.0f * M_PI / led_count);
+			    float phase = (normalized_position * FREQ_FACTOR) + ((float)animphase * ANIM_PHASE_SCALE / led_count);
+
+			    float sine_value = sinf(phase); // * sinf(phase);
+
+			    float intensity_multiplier = SINE_WAVE_OFFSET + (sine_value * SINE_WAVE_AMPLITUDE);
+
+			    if (intensity_multiplier < 0.0f) intensity_multiplier = 0.0f;
+			    if (intensity_multiplier > 1.0f) intensity_multiplier = 1.0f;
+
+			    unsigned int red = (original_color >> 16) & 0xFF;
+			    unsigned int green = (original_color >> 8) & 0xFF;
+			    unsigned int blue = original_color & 0xFF;
+
+			    //intensity_multiplier = 1- intensity_multiplier;
+			    red = (unsigned int)(red * intensity_multiplier);
+			    green = (unsigned int)(green * intensity_multiplier);
+			    blue = (unsigned int)(blue * intensity_multiplier);
+
+			    matrix[i] = (red << 16) | (green << 8) | blue;
+			}
+			animphase++;
 			break;
 		  default:
 		    for (i=0;i<led_count;i++) {
